@@ -22,6 +22,18 @@ pub fn compile_function(module: &LLVMModuleRef, expression: &FunctionExpression)
 
     let function_name = expression.name.as_str();
     let function = unsafe { LLVMAddFunction(*module, raw_cstr(function_name), function_type) };
+
+    for (i, item) in expression.arguments.clone().into_iter().enumerate() {
+        let binding = raw_cstr(item.binding_name.as_str());
+        unsafe {
+            LLVMSetValueName2(
+                LLVMGetParam(function, i as u32),
+                binding,
+                item.binding_name.len(),
+            )
+        }
+    }
+
     let block = super::block::compile_block(module, &expression.body);
 
     unsafe { LLVMAppendExistingBasicBlock(function, block) }

@@ -55,7 +55,7 @@ pub struct FunctionExpression {
     pub arguments: Vec<FunctionArgument>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FunctionArgument {
     pub binding_name: String,
 }

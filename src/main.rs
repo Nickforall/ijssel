@@ -41,7 +41,7 @@ fn main() {
                 .required(false)
                 .long("type")
                 .takes_value(true)
-                .possible_values(&["object", "asm", "tokens", "ast"])
+                .possible_values(&["object", "asm", "tokens", "ast", "bc"])
                 .help("Output format. Tokens and AST are printed to stdout.")
                 .default_value("object"),
         )
@@ -72,6 +72,7 @@ fn main() {
 
         let extension = match matches.value_of("file-type").unwrap_or("object") {
             "asm" => "s",
+            "bc" => "bc",
             "object" | _ => "o",
         };
 
@@ -83,6 +84,13 @@ fn main() {
         );
 
         let llvm_module = codegen::compile_application(parser.module);
+
+        if matches.value_of("file-type").unwrap_or("object") == "bc" {
+            unsafe {
+                llvm_sys::bit_writer::LLVMWriteBitcodeToFile(llvm_module, raw_cstr(output));
+            }
+            return;
+        }
 
         let file_type = match matches.value_of("file-type").unwrap_or("object") {
             "asm" => llvm_sys::target_machine::LLVMCodeGenFileType::LLVMAssemblyFile,
