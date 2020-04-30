@@ -7,6 +7,7 @@ use std::ffi::CString;
 use std::fs;
 use std::os::raw::c_char;
 use std::path;
+use std::time::Instant;
 
 mod codegen;
 mod machine;
@@ -32,7 +33,7 @@ fn main() {
                 .required(false)
                 .short("o")
                 .long("output")
-                .help("Output to write object or assembly to. If omitted this will default to the input file name with an extension corresponding the `type`")
+                .help("Output to write object or assembly to. If omitted this will default to the input file name with an extension corresponding the `type`.")
                 .takes_value(true),
         )
         .arg(
@@ -40,12 +41,14 @@ fn main() {
                 .required(false)
                 .long("type")
                 .takes_value(true)
-                .possible_values(&["object", "asm"])
-                .help("Output format.")
+                .possible_values(&["object", "asm", "tokens", "ast"])
+                .help("Output format. Tokens and AST are printed to stdout.")
                 .default_value("object"),
         )
         .arg(Arg::with_name("debug").long("debug").help("Whether to perform optimisations"))
         .get_matches();
+
+    let now = Instant::now();
 
     let file = matches.value_of("source").expect("File is required");
     let debug = matches.is_present("debug");
@@ -54,8 +57,18 @@ fn main() {
         let mut tokenizer = Tokenizer::new(&string);
         tokenizer.parse();
 
+        if matches.value_of("file-type").unwrap_or("object") == "tokens" {
+            println!("{:#?}", tokenizer.tokens);
+            return;
+        }
+
         let mut parser = Parser::new(&tokenizer.tokens);
         parser.parse_module();
+
+        if matches.value_of("file-type").unwrap_or("object") == "ast" {
+            println!("{:#?}", parser.module);
+            return;
+        }
 
         let extension = match matches.value_of("file-type").unwrap_or("object") {
             "asm" => "s",
@@ -76,9 +89,12 @@ fn main() {
             "object" | _ => llvm_sys::target_machine::LLVMCodeGenFileType::LLVMObjectFile,
         };
 
-        machine::compile_to_current_target(&llvm_module, output, file_type, debug)
+        machine::compile_to_current_target(&llvm_module, output, file_type, debug);
+
+        let benchmark = now.elapsed().as_millis();
+        println!("Compiled {} in {}ms!", output, benchmark)
     } else {
-        panic!("File {} not found", file)
+        println!("File {} not found", file)
     }
 }
 
