@@ -38,6 +38,7 @@ pub enum TokenValue {
     Operator(BinaryOperator),
     OpenParen,
     CloseParen,
+    Comma,
 }
 
 #[derive(Clone, Debug)]
@@ -110,16 +111,32 @@ impl Tokenizer<'_> {
         }
     }
 
+    pub fn read_while<F>(&mut self, f: F) -> String
+    where
+        F: Fn(&char) -> bool,
+    {
+        let mut accumulator: Vec<char> = Vec::new();
+        while self.buffer.by_ref().peek().is_some() {
+            if let Some(peek) = self.buffer.by_ref().peek() {
+                if f(peek) {
+                    accumulator.push(self.buffer.next().unwrap());
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+
+        accumulator.into_iter().collect()
+    }
+
     fn parse_token(&mut self) {
         let peek: &char = { self.buffer.peek().clone().unwrap() };
 
         let token: Option<Token> = match peek {
             peek if peek.is_numeric() => {
-                let number_str: String = self
-                    .buffer
-                    .by_ref()
-                    .take_while(|c| c.is_numeric() || *c == '.')
-                    .collect();
+                let number_str: String = self.read_while(|c| c.is_numeric() || *c == '.');
 
                 let number: f64 = number_str.parse().expect(
                     format!("Numeric constant {:?} could not be parsed", number_str).as_str(),
@@ -128,11 +145,7 @@ impl Tokenizer<'_> {
                 Some(Token::num_const(number))
             }
             peek if peek.is_alphabetic() => {
-                let string: String = self
-                    .buffer
-                    .by_ref()
-                    .take_while(|c| c.is_alphanumeric())
-                    .collect();
+                let string: String = self.read_while(|c| c.is_alphabetic() || *c == '.');
 
                 let kw_string = string.clone();
                 if let Ok(kw) = Keyword::try_from(kw_string) {
@@ -160,6 +173,10 @@ impl Tokenizer<'_> {
             ')' => {
                 self.buffer.by_ref().next();
                 Some(Token::new(TokenValue::CloseParen))
+            }
+            ',' => {
+                self.buffer.by_ref().next();
+                Some(Token::new(TokenValue::Comma))
             }
             peek if peek.is_whitespace() => {
                 self.buffer.by_ref().next();

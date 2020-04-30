@@ -4,15 +4,19 @@ use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 
 pub fn compile_function(module: &LLVMModuleRef, expression: &FunctionExpression) {
-    let function_type = unsafe {
-        let mut arg_type = [];
-        let fn_type = LLVMFunctionType(
-            LLVMInt32Type(),
-            arg_type.as_mut_ptr(),
-            arg_type.len() as u32,
-            0,
-        );
+    let args_count = expression.arguments.len();
+    let mut args: Vec<LLVMTypeRef> = Vec::with_capacity(args_count);
+    let arg_type: *mut *mut llvm_sys::LLVMType = {
+        for _arg in &expression.arguments {
+            // TODO: types
+            args.push(unsafe { LLVMInt32Type() });
+        }
 
+        args.as_mut_ptr()
+    };
+
+    let function_type = unsafe {
+        let fn_type = LLVMFunctionType(LLVMInt32Type(), arg_type, args.len() as u32, 0);
         fn_type
     };
 

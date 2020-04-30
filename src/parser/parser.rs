@@ -52,13 +52,26 @@ impl NumberLiteralExpression {
 pub struct FunctionExpression {
     pub name: String,
     pub body: BlockExpression,
+    pub arguments: Vec<FunctionArgument>,
+}
+
+#[derive(Debug)]
+pub struct FunctionArgument {
+    pub binding_name: String,
+}
+
+impl FunctionArgument {
+    pub fn new(binding_name: String) -> Self {
+        Self { binding_name }
+    }
 }
 
 impl FunctionExpression {
-    pub fn new(name: &str, block: BlockExpression) -> Self {
+    pub fn new(name: &str, body: BlockExpression, args: Vec<FunctionArgument>) -> Self {
         Self {
             name: String::from(name),
-            body: block,
+            arguments: args,
+            body,
         }
     }
 }
@@ -143,6 +156,8 @@ impl Parser<'_> {
         let open_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
         if let Keyword(Do) = &open_token.value {
             self.tokens.by_ref().next();
+        } else {
+            panic!("Expected token Keyword(Do), got {:?}", open_token)
         }
 
         let mut expressions = Vec::new();
@@ -170,12 +185,66 @@ impl Parser<'_> {
             let name_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
             if let Identifier(name) = &name_token.value {
                 self.tokens.by_ref().next();
-                FunctionExpression::new(name, self.parse_block())
+
+                let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                let args = if let TokenValue::OpenParen = peek.value {
+                    self.parse_function_args()
+                } else {
+                    Vec::new()
+                };
+
+                FunctionExpression::new(name, self.parse_block(), args)
             } else {
                 panic!("Unexpected token, expected Identifier ")
             }
         } else {
             panic!("Unexpected token, expected Keyword `fn` ")
+        }
+    }
+
+    fn parse_function_args(&mut self) -> Vec<FunctionArgument> {
+        let open_paren = self.tokens.by_ref().peek().expect("Unexpected EOF");
+        if let OpenParen = &open_paren.value {
+            self.tokens.by_ref().next();
+        } else {
+            panic!("expected `(`, got {:?}", open_paren.value)
+        }
+
+        let mut args: Vec<FunctionArgument> = vec![];
+        while self.tokens.by_ref().peek().is_some() {
+            let possible_end_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
+            if let CloseParen = &possible_end_token.value {
+                self.tokens.by_ref().next();
+                break;
+            }
+
+            let fn_signature = self.parse_function_arg_signature();
+            args.push(fn_signature);
+
+            let _ = {
+                let delimiter = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                if let Comma = &delimiter.value {
+                    self.tokens.by_ref().next()
+                } else if let CloseParen = &delimiter.value {
+                    self.tokens.by_ref().next();
+                    break;
+                } else {
+                    panic!("expected `,`, got {:?}", delimiter.value)
+                }
+            };
+        }
+
+        args
+    }
+
+    fn parse_function_arg_signature(&mut self) -> FunctionArgument {
+        let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+        match &peek.value {
+            Identifier(binding) => {
+                self.tokens.by_ref().next();
+                FunctionArgument::new(binding.clone())
+            }
+            token => panic!("Unexpected token {:?}", token),
         }
     }
 
