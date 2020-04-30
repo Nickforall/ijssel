@@ -8,11 +8,8 @@ use crate::parser::parser::Expression;
 use crate::parser::parser::Module;
 use llvm_sys::prelude::*;
 
-pub fn compile_application(module: Module) {
-    let llvm_module = self::module::compile_module(&module);
-    unsafe {
-        llvm_sys::bit_writer::LLVMWriteBitcodeToFile(llvm_module, crate::raw_cstr("ijssel.bc"));
-    }
+pub fn compile_application(module: Module) -> LLVMModuleRef {
+    self::module::compile_module(&module)
 }
 
 pub fn compile_expression_to_instruction(

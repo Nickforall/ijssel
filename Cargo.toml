@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 llvm-sys = "100"
 libc = "0.2"
+clap = "2.33.0"
