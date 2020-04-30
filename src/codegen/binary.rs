@@ -5,21 +5,36 @@ use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 
 pub fn compile_binary_expression_to_instruction(
-    builder: &LLVMBuilderRef,
+    containing_block: &super::CodegenBlock,
     expression: &BinaryExpression,
 ) -> LLVMValueRef {
-    let right = super::compile_expression_to_instruction(builder, &expression.right);
-    let left = super::compile_expression_to_instruction(builder, &expression.left);
+    let right = super::compile_expression_to_instruction(containing_block, &expression.right);
+    let left = super::compile_expression_to_instruction(containing_block, &expression.left);
 
     match expression.operator {
         BinaryOperator::Add => unsafe {
-            LLVMBuildAdd(*builder, left, right, raw_cstr("__ijssel_tmp"))
+            LLVMBuildAdd(
+                containing_block.builder,
+                left,
+                right,
+                raw_cstr("__ijssel_tmp"),
+            )
         },
         BinaryOperator::Mul => unsafe {
-            LLVMBuildMul(*builder, left, right, raw_cstr("__ijssel_tmp"))
+            LLVMBuildMul(
+                containing_block.builder,
+                left,
+                right,
+                raw_cstr("__ijssel_tmp"),
+            )
         },
         BinaryOperator::Sub => unsafe {
-            LLVMBuildSub(*builder, left, right, raw_cstr("__ijssel_tmp"))
+            LLVMBuildSub(
+                containing_block.builder,
+                left,
+                right,
+                raw_cstr("__ijssel_tmp"),
+            )
         },
     }
 }

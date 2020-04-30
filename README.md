@@ -7,8 +7,8 @@ fn main do
     100 + 10 * 300 - 12
 end
 
-fn something do
-    12 * 12
+fn add(a, b) do
+    a + b
 end
 ```
 

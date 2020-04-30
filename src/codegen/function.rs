@@ -2,6 +2,7 @@ use crate::parser::parser::FunctionExpression;
 use crate::raw_cstr;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
+use std::collections::HashMap;
 
 pub fn compile_function(module: &LLVMModuleRef, expression: &FunctionExpression) {
     let args_count = expression.arguments.len();
@@ -23,18 +24,20 @@ pub fn compile_function(module: &LLVMModuleRef, expression: &FunctionExpression)
     let function_name = expression.name.as_str();
     let function = unsafe { LLVMAddFunction(*module, raw_cstr(function_name), function_type) };
 
+    let mut function_bindings: super::block::BindingsHashMap = HashMap::new();
+
     for (i, item) in expression.arguments.clone().into_iter().enumerate() {
         let binding = raw_cstr(item.binding_name.as_str());
-        unsafe {
-            LLVMSetValueName2(
-                LLVMGetParam(function, i as u32),
-                binding,
-                item.binding_name.len(),
-            )
-        }
+        let value_ref = unsafe {
+            let value = LLVMGetParam(function, i as u32);
+            LLVMSetValueName2(value, binding, item.binding_name.len());
+            value
+        };
+
+        function_bindings.insert(item.binding_name, value_ref);
     }
 
-    let block = super::block::compile_block(module, &expression.body);
+    let block = super::block::compile_block(module, &expression.body, function_bindings);
 
     unsafe { LLVMAppendExistingBasicBlock(function, block) }
 }

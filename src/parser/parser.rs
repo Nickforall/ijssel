@@ -23,12 +23,30 @@ pub enum Expression {
     Function(Box<FunctionExpression>),
     Binary(Box<BinaryExpression>),
     NumberLiteral(Box<NumberLiteralExpression>),
+    Variable(Box<VariableExpression>),
     // Block(Box<BlockExpression>),
 }
 
 #[derive(Debug)]
 pub struct NumberLiteralExpression {
     pub number: f64,
+}
+
+impl NumberLiteralExpression {
+    pub fn new(number: f64) -> Self {
+        NumberLiteralExpression { number }
+    }
+}
+
+#[derive(Debug)]
+pub struct VariableExpression {
+    pub binding: String,
+}
+
+impl VariableExpression {
+    pub fn new(binding: String) -> Self {
+        VariableExpression { binding }
+    }
 }
 
 #[derive(Debug)]
@@ -39,12 +57,6 @@ pub struct BlockExpression {
 impl BlockExpression {
     pub fn new(expressions: Vec<Expression>) -> Self {
         BlockExpression { expressions }
-    }
-}
-
-impl NumberLiteralExpression {
-    pub fn new(number: f64) -> Self {
-        NumberLiteralExpression { number }
     }
 }
 
@@ -118,6 +130,10 @@ impl Parser<'_> {
             TokenValue::NumConst(float) => {
                 self.tokens.by_ref().next();
                 Expression::NumberLiteral(Box::new(NumberLiteralExpression::new(*float)))
+            }
+            TokenValue::Identifier(identifier) => {
+                self.tokens.by_ref().next();
+                Expression::Variable(Box::new(VariableExpression::new(identifier.clone())))
             }
             val => panic!(
                 "Expected an expression, got token {:?} which cannot compose an expression",
