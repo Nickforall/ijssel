@@ -135,6 +135,7 @@ impl Tokenizer<'_> {
         let peek: &char = { self.buffer.peek().clone().unwrap() };
 
         let token: Option<Token> = match peek {
+            // literals
             peek if peek.is_numeric() => {
                 let number_str: String = self.read_while(|c| c.is_numeric() || *c == '.');
 
@@ -144,8 +145,9 @@ impl Tokenizer<'_> {
 
                 Some(Token::num_const(number))
             }
+            // identifiers
             peek if peek.is_alphabetic() => {
-                let string: String = self.read_while(|c| c.is_alphabetic() || *c == '.');
+                let string: String = self.read_while(|c| c.is_alphabetic());
 
                 let kw_string = string.clone();
                 if let Ok(kw) = Keyword::try_from(kw_string) {
@@ -154,6 +156,13 @@ impl Tokenizer<'_> {
                     Some(Token::identifier(string))
                 }
             }
+            // comments
+            '#' => {
+                self.buffer.by_ref().next();
+                self.read_while(|c| *c != '\n');
+                None
+            }
+            // operators
             '+' => {
                 self.buffer.by_ref().next();
                 Some(Token::new(TokenValue::Operator(BinaryOperator::Add)))

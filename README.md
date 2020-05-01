@@ -7,6 +7,7 @@ fn main do
     100 + 10 * 300 - 12
 end
 
+# Adds a to b
 fn add(a, b) do
     a + b
 end
