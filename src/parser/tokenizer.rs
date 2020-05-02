@@ -46,7 +46,9 @@ pub enum Keyword {
     Fn,
     Do,
     End,
+    DefExtern,
 }
+
 #[derive(Clone, Debug, Copy)]
 pub enum BinaryOperator {
     Add,
@@ -64,6 +66,7 @@ impl TryFrom<&str> for Keyword {
             "fn" => Ok(Fn),
             "do" => Ok(Do),
             "end" => Ok(End),
+            "defextern" => Ok(DefExtern),
             _ => Err("Invalid keyword"),
         }
     }
@@ -146,8 +149,8 @@ impl Tokenizer<'_> {
                 Some(Token::num_const(number))
             }
             // identifiers
-            peek if peek.is_alphabetic() => {
-                let string: String = self.read_while(|c| c.is_alphabetic());
+            peek if peek.is_alphabetic() || *peek == '_' => {
+                let string: String = self.read_while(|c| c.is_alphabetic() || *c == '_');
 
                 let kw_string = string.clone();
                 if let Ok(kw) = Keyword::try_from(kw_string) {

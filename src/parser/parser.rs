@@ -21,6 +21,7 @@ impl Module {
 #[derive(Debug)]
 pub enum Expression {
     Function(Box<FunctionExpression>),
+    ExternFunction(Box<ExternFunctionExpression>),
     Binary(Box<BinaryExpression>),
     NumberLiteral(Box<NumberLiteralExpression>),
     Variable(Box<VariableExpression>),
@@ -68,6 +69,12 @@ pub struct FunctionExpression {
     pub arguments: Vec<FunctionArgument>,
 }
 
+#[derive(Debug)]
+pub struct ExternFunctionExpression {
+    pub name: String,
+    pub arguments: Vec<FunctionArgument>,
+}
+
 #[derive(Clone, Debug)]
 pub struct FunctionArgument {
     pub binding_name: String,
@@ -85,6 +92,15 @@ impl FunctionExpression {
             name: String::from(name),
             arguments: args,
             body,
+        }
+    }
+}
+
+impl ExternFunctionExpression {
+    pub fn new(name: &str, args: Vec<FunctionArgument>) -> Self {
+        Self {
+            name: String::from(name),
+            arguments: args,
         }
     }
 }
@@ -279,6 +295,32 @@ impl Parser<'_> {
         }
     }
 
+    pub fn parse_extern_function(&mut self) -> ExternFunctionExpression {
+        let def_extern_keyword = self.tokens.by_ref().peek().expect("Unexpected EOF");
+
+        if let Keyword(DefExtern) = &def_extern_keyword.value {
+            self.tokens.by_ref().next();
+
+            let name_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
+            if let Identifier(name) = &name_token.value {
+                self.tokens.by_ref().next();
+
+                let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                let args = if let TokenValue::OpenParen = peek.value {
+                    self.parse_function_args()
+                } else {
+                    Vec::new()
+                };
+
+                ExternFunctionExpression::new(name, args)
+            } else {
+                panic!("Unexpected token, expected Identifier ")
+            }
+        } else {
+            panic!("Unexpected token, expected Keyword `defextern` ")
+        }
+    }
+
     fn parse_function_args(&mut self) -> Vec<FunctionArgument> {
         let open_paren = self.tokens.by_ref().peek().expect("Unexpected EOF");
         if let OpenParen = &open_paren.value {
@@ -334,6 +376,9 @@ impl Parser<'_> {
 
         let expression: Option<Expression> = match &peek.value {
             Keyword(Fn) => Some(Expression::Function(Box::new(self.parse_function()))),
+            Keyword(DefExtern) => Some(Expression::ExternFunction(Box::new(
+                self.parse_extern_function(),
+            ))),
             token => panic!("Unexpected token, {:?}", token),
         };
 

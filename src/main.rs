@@ -41,8 +41,8 @@ fn main() {
                 .required(false)
                 .long("type")
                 .takes_value(true)
-                .possible_values(&["object", "asm", "tokens", "ast", "bc"])
-                .help("Output format. Tokens and AST are printed to stdout.")
+                .possible_values(&["object", "asm", "tokens", "ast", "bc", "ll"])
+                .help("Output format. Tokens, AST and LL are printed to stdout.")
                 .default_value("object"),
         )
         .arg(Arg::with_name("debug").long("debug").help("Whether to perform optimisations"))
@@ -84,6 +84,11 @@ fn main() {
         );
 
         let llvm_module = codegen::compile_application(parser.module);
+
+        if matches.value_of("file-type").unwrap_or("object") == "ll" {
+            unsafe { llvm_sys::core::LLVMDumpModule(llvm_module) };
+            return;
+        }
 
         if matches.value_of("file-type").unwrap_or("object") == "bc" {
             unsafe {

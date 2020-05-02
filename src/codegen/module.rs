@@ -10,6 +10,10 @@ pub fn compile_module(module: &Module) -> LLVMModuleRef {
     for expression in &module.expressions {
         match expression {
             Expression::Function(expr) => super::function::compile_function(&llvm_module, &**expr),
+            Expression::ExternFunction(expr) => {
+                super::function::compile_extern_function(&llvm_module, &**expr)
+            }
+
             expr => panic!("Incorrect module level expression {:?}", expr),
         }
     }
