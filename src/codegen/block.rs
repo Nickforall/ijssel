@@ -9,12 +9,17 @@ pub type BindingsHashMap = HashMap<String, LLVMValueRef>;
 
 pub struct CodegenBlock {
     pub bindings: BindingsHashMap,
+    pub module: LLVMModuleRef,
     pub inner: LLVMBasicBlockRef,
     pub builder: LLVMBuilderRef,
 }
 
 impl CodegenBlock {
-    pub fn new(inner: LLVMBasicBlockRef, bindings: BindingsHashMap) -> CodegenBlock {
+    pub fn new(
+        module: LLVMModuleRef,
+        inner: LLVMBasicBlockRef,
+        bindings: BindingsHashMap,
+    ) -> CodegenBlock {
         let builder = unsafe { LLVMCreateBuilder() };
         unsafe {
             LLVMPositionBuilderAtEnd(builder, inner);
@@ -22,6 +27,7 @@ impl CodegenBlock {
 
         CodegenBlock {
             bindings,
+            module,
             builder,
             inner,
         }
@@ -35,7 +41,7 @@ pub fn compile_block(
 ) -> LLVMBasicBlockRef {
     let context = unsafe { LLVMGetModuleContext(*module) };
     let basic_block = unsafe { LLVMCreateBasicBlockInContext(context, raw_cstr("entry")) };
-    let block = CodegenBlock::new(basic_block, inherited_bindings.clone());
+    let block = CodegenBlock::new(*module, basic_block, inherited_bindings.clone());
 
     let mut last_value_ref = None;
     for expression in &ast_block.expressions {

@@ -24,6 +24,7 @@ pub enum Expression {
     Binary(Box<BinaryExpression>),
     NumberLiteral(Box<NumberLiteralExpression>),
     Variable(Box<VariableExpression>),
+    Call(Box<CallExpression>),
     // Block(Box<BlockExpression>),
 }
 
@@ -89,6 +90,21 @@ impl FunctionExpression {
 }
 
 #[derive(Debug)]
+pub struct CallExpression {
+    pub function_name: String,
+    pub args: Vec<Expression>,
+}
+
+impl CallExpression {
+    pub fn new(function_name: String, args: Vec<Expression>) -> Self {
+        Self {
+            function_name,
+            args,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct BinaryExpression {
     pub left: Expression,
     pub right: Expression,
@@ -121,7 +137,52 @@ impl Parser<'_> {
 
     pub fn parse_expression(&mut self) -> Expression {
         let atom = self.parse_atom();
-        return self.parse_maybe_binary(atom, 0);
+        let maybe_binary_expression = self.parse_maybe_binary(atom, 0);
+
+        if let Expression::Variable(variable_expression) = &maybe_binary_expression {
+            if let Some(expression) = self.parse_maybe_call(&variable_expression) {
+                return expression;
+            }
+        }
+
+        return maybe_binary_expression;
+    }
+
+    pub fn parse_maybe_call(&mut self, expression: &VariableExpression) -> Option<Expression> {
+        if let TokenValue::OpenParen = self.tokens.peek().unwrap().value {
+            self.tokens.by_ref().next();
+
+            let mut call_args: Vec<Expression> = vec![];
+            while self.tokens.by_ref().peek().is_some() {
+                let possible_end_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                if let CloseParen = &possible_end_token.value {
+                    self.tokens.by_ref().next();
+                    break;
+                }
+
+                let call_arg_expression = self.parse_expression();
+                call_args.push(call_arg_expression);
+
+                let _ = {
+                    let delimiter = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                    if let Comma = &delimiter.value {
+                        self.tokens.by_ref().next()
+                    } else if let CloseParen = &delimiter.value {
+                        self.tokens.by_ref().next();
+                        break;
+                    } else {
+                        panic!("expected `,`, got {:?}", delimiter.value)
+                    }
+                };
+            }
+
+            return Some(Expression::Call(Box::new(CallExpression::new(
+                expression.binding.clone(),
+                call_args,
+            ))));
+        }
+
+        return None;
     }
 
     pub fn parse_atom(&mut self) -> Expression {

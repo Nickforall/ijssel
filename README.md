@@ -4,7 +4,7 @@ Tiny LLVM-based compiler.
 
 ```
 fn main do
-    100 + 10 * 300 - 12
+    add(100, 1000)
 end
 
 # Adds a to b
