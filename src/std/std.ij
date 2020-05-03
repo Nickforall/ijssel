@@ -1,0 +1,3 @@
+defextern print_digit(digit)
+defextern ijssel_exit(code)
+defextern ijssel_time()
