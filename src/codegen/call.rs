@@ -1,7 +1,7 @@
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 
-use crate::parser::parser::CallExpression;
+use crate::parser::CallExpression;
 use crate::raw_cstr;
 
 pub fn compile_call(block: &super::CodegenBlock, expression: &CallExpression) -> LLVMValueRef {

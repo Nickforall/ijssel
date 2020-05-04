@@ -4,3 +4,6 @@
 *.o
 test.ij
 /tmp
+
+# wip vscode plugin
+/ijssel-language-support

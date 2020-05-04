@@ -1,4 +1,4 @@
-use crate::parser::parser::VariableExpression;
+use crate::parser::VariableExpression;
 use llvm_sys::prelude::*;
 
 pub fn compile_variable_expression(

@@ -1,5 +1,5 @@
-use crate::parser::parser::BinaryExpression;
 use crate::parser::tokenizer::BinaryOperator;
+use crate::parser::BinaryExpression;
 use crate::raw_cstr;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;

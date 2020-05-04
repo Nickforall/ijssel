@@ -8,8 +8,8 @@ pub mod variable;
 
 pub use block::CodegenBlock;
 
-use crate::parser::parser::Expression;
-use crate::parser::parser::Module;
+use crate::parser::Expression;
+use crate::parser::Module;
 use llvm_sys::prelude::*;
 
 pub fn compile_application(module: Module) -> LLVMModuleRef {
@@ -20,7 +20,7 @@ pub fn compile_expression_to_instruction(
     containing_block: &CodegenBlock,
     expression: &Expression,
 ) -> LLVMValueRef {
-    use crate::parser::parser::Expression::*;
+    use crate::parser::Expression::*;
 
     match expression {
         Binary(expr) => binary::compile_binary_expression_to_instruction(containing_block, expr),

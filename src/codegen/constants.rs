@@ -1,4 +1,4 @@
-use crate::parser::parser::NumberLiteralExpression;
+use crate::parser::NumberLiteralExpression;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
 
