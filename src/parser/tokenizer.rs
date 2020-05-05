@@ -39,6 +39,7 @@ pub enum TokenValue {
     OpenParen,
     CloseParen,
     Comma,
+    Colon,
 }
 
 #[derive(Clone, Debug)]
@@ -150,7 +151,7 @@ impl Tokenizer<'_> {
             }
             // identifiers
             peek if peek.is_alphabetic() || *peek == '_' => {
-                let string: String = self.read_while(|c| c.is_alphabetic() || *c == '_');
+                let string: String = self.read_while(|c| c.is_alphanumeric() || *c == '_');
 
                 let kw_string = string.clone();
                 if let Ok(kw) = Keyword::try_from(kw_string) {
@@ -189,6 +190,10 @@ impl Tokenizer<'_> {
             ',' => {
                 self.buffer.by_ref().next();
                 Some(Token::new(TokenValue::Comma))
+            }
+            ':' => {
+                self.buffer.by_ref().next();
+                Some(Token::new(TokenValue::Colon))
             }
             peek if peek.is_whitespace() => {
                 self.buffer.by_ref().next();

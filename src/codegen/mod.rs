@@ -6,11 +6,12 @@ pub mod function;
 pub mod module;
 pub mod variable;
 
-pub use block::CodegenBlock;
-
-use crate::parser::Expression;
-use crate::parser::Module;
 use llvm_sys::prelude::*;
+
+use crate::modules::Module;
+use crate::parser::Expression;
+
+pub use block::CodegenBlock;
 
 pub fn compile_application(module: Module) -> LLVMModuleRef {
     self::module::compile_module(&module)

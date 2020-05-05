@@ -1,59 +1,77 @@
 use super::tokenizer::BinaryOperator;
+use super::Type;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct NumberLiteralExpression {
     pub number: f64,
+    pub return_type: Type,
 }
 
 impl NumberLiteralExpression {
     pub fn new(number: f64) -> Self {
-        NumberLiteralExpression { number }
+        NumberLiteralExpression {
+            number,
+            return_type: Type::Int32,
+        }
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VariableExpression {
     pub binding: String,
+    pub return_type: Type,
 }
 
 impl VariableExpression {
     pub fn new(binding: String) -> Self {
-        VariableExpression { binding }
+        VariableExpression {
+            binding,
+            return_type: Type::Unknown,
+        }
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct BlockExpression {
     pub expressions: Vec<Expression>,
+    pub return_type: Type,
 }
 
 impl BlockExpression {
     pub fn new(expressions: Vec<Expression>) -> Self {
-        BlockExpression { expressions }
+        BlockExpression {
+            expressions,
+            return_type: Type::Unknown,
+        }
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FunctionExpression {
     pub name: String,
     pub body: BlockExpression,
     pub arguments: Vec<FunctionArgument>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ExternFunctionExpression {
     pub name: String,
     pub arguments: Vec<FunctionArgument>,
+    pub return_type: Type,
 }
 
 #[derive(Clone, Debug)]
 pub struct FunctionArgument {
     pub binding_name: String,
+    pub input_type: Type,
 }
 
 impl FunctionArgument {
-    pub fn new(binding_name: String) -> Self {
-        Self { binding_name }
+    pub fn new(binding_name: String, input_type: Type) -> Self {
+        Self {
+            binding_name,
+            input_type,
+        }
     }
 }
 
@@ -72,11 +90,12 @@ impl ExternFunctionExpression {
         Self {
             name: String::from(name),
             arguments: args,
+            return_type: Type::Int32,
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CallExpression {
     pub function_name: String,
     pub args: Vec<Expression>,
@@ -91,7 +110,7 @@ impl CallExpression {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct BinaryExpression {
     pub left: Expression,
     pub right: Expression,
@@ -108,7 +127,7 @@ impl BinaryExpression {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Expression {
     Function(Box<FunctionExpression>),
     ExternFunction(Box<ExternFunctionExpression>),

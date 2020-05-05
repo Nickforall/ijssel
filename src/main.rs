@@ -11,6 +11,7 @@ use std::time::Instant;
 
 mod codegen;
 mod machine;
+mod modules;
 mod parser;
 
 use self::parser::parser::Parser;
@@ -70,6 +71,8 @@ fn main() {
             return;
         }
 
+        let module = modules::Module::from_ast_module(parser.module);
+
         let extension = match matches.value_of("file-type").unwrap_or("object") {
             "asm" => "s",
             "bc" => "bc",
@@ -83,7 +86,7 @@ fn main() {
                 .expect("Invalid default output"),
         );
 
-        let llvm_module = codegen::compile_application(parser.module);
+        let llvm_module = codegen::compile_application(module);
 
         if matches.value_of("file-type").unwrap_or("object") == "ll" {
             unsafe { llvm_sys::core::LLVMDumpModule(llvm_module) };

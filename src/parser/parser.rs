@@ -1,6 +1,7 @@
 use super::expression::*;
 use super::tokenizer::{Keyword::*, Token, TokenValue, TokenValue::*};
-use super::Module;
+use super::types::Type;
+use super::AstModule;
 
 use std::iter::Peekable;
 use std::slice::Iter;
@@ -8,14 +9,14 @@ use std::slice::Iter;
 #[derive(Debug)]
 pub struct Parser<'a> {
     tokens: Peekable<Iter<'a, Token>>,
-    pub module: Module,
+    pub module: AstModule,
 }
 
 impl Parser<'_> {
     pub fn new(tokens: &'_ Vec<Token>) -> Parser {
         Parser {
             tokens: tokens.iter().peekable(),
-            module: Module::new(),
+            module: AstModule::new(),
         }
     }
 
@@ -224,14 +225,32 @@ impl Parser<'_> {
         args
     }
 
+    fn parse_type_signature(&mut self) -> Type {
+        let possible_colon = self.tokens.peek().expect("Unexpected EOF");
+        if let TokenValue::Colon = &possible_colon.value {
+            self.tokens.by_ref().next();
+        } else {
+            panic!("Expected :, got {:?}", possible_colon)
+        }
+
+        let possible_ident = self.tokens.by_ref().peek().expect("Unexpected EOF");
+        if let TokenValue::Identifier(ident) = &possible_ident.value {
+            self.tokens.by_ref().next();
+            Type::from(ident.clone())
+        } else {
+            panic!("Expected type-identifier, got {:?}", possible_ident)
+        }
+    }
+
     fn parse_function_arg_signature(&mut self) -> FunctionArgument {
         let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
         match &peek.value {
             Identifier(binding) => {
                 self.tokens.by_ref().next();
-                FunctionArgument::new(binding.clone())
+                let arg_type = self.parse_type_signature();
+                FunctionArgument::new(binding.clone(), arg_type)
             }
-            token => panic!("Unexpected token {:?}", token),
+            token => panic!("Unexpected token {:?}, expected identifier", token),
         }
     }
 
