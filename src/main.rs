@@ -13,6 +13,7 @@ mod codegen;
 mod machine;
 mod modules;
 mod parser;
+mod type_system;
 
 use self::parser::parser::Parser;
 use self::parser::tokenizer::Tokenizer;

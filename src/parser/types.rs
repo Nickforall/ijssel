@@ -1,6 +1,6 @@
 use std::convert::From;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
     /// A type that still needs to be inferred by the type-checker. The codegen compiler will crash when encountering an unknown type.
     Unknown,
@@ -10,6 +10,9 @@ pub enum Type {
 
     /// A user defined type. This can be a typealias or a struct type.
     User(String),
+
+    /// Return type used by extern functions
+    Void,
 }
 
 impl From<&str> for Type {

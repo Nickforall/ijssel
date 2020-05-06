@@ -4,6 +4,7 @@ pub mod call;
 pub mod constants;
 pub mod function;
 pub mod module;
+pub mod types;
 pub mod variable;
 
 use llvm_sys::prelude::*;

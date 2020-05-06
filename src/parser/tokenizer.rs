@@ -30,7 +30,7 @@ impl Token {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum TokenValue {
     Keyword(Keyword),
     Identifier(String),
@@ -40,9 +40,10 @@ pub enum TokenValue {
     CloseParen,
     Comma,
     Colon,
+    ReturnArrow,
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Keyword {
     Fn,
     Do,
@@ -50,7 +51,7 @@ pub enum Keyword {
     DefExtern,
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(PartialEq, Clone, Debug, Copy)]
 pub enum BinaryOperator {
     Add,
     Sub,
@@ -173,7 +174,13 @@ impl Tokenizer<'_> {
             }
             '-' => {
                 self.buffer.by_ref().next();
-                Some(Token::new(TokenValue::Operator(BinaryOperator::Sub)))
+
+                if self.buffer.by_ref().peek() == Some(&'>') {
+                    self.buffer.by_ref().next();
+                    Some(Token::new(TokenValue::ReturnArrow))
+                } else {
+                    Some(Token::new(TokenValue::Operator(BinaryOperator::Sub)))
+                }
             }
             '*' => {
                 self.buffer.by_ref().next();

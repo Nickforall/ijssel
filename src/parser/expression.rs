@@ -38,10 +38,10 @@ pub struct BlockExpression {
 }
 
 impl BlockExpression {
-    pub fn new(expressions: Vec<Expression>) -> Self {
+    pub fn new(expressions: Vec<Expression>, return_type: Type) -> Self {
         BlockExpression {
             expressions,
-            return_type: Type::Unknown,
+            return_type,
         }
     }
 }
@@ -86,11 +86,11 @@ impl FunctionExpression {
 }
 
 impl ExternFunctionExpression {
-    pub fn new(name: &str, args: Vec<FunctionArgument>) -> Self {
+    pub fn new(name: &str, args: Vec<FunctionArgument>, return_type: Type) -> Self {
         Self {
             name: String::from(name),
             arguments: args,
-            return_type: Type::Int32,
+            return_type,
         }
     }
 }

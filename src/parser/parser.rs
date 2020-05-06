@@ -114,7 +114,7 @@ impl Parser<'_> {
         return left;
     }
 
-    pub fn parse_block(&mut self) -> BlockExpression {
+    pub fn parse_block(&mut self, return_type: Type) -> BlockExpression {
         let open_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
         if let Keyword(Do) = &open_token.value {
             self.tokens.by_ref().next();
@@ -135,7 +135,7 @@ impl Parser<'_> {
             expressions.push(expression);
         }
 
-        return BlockExpression::new(expressions);
+        return BlockExpression::new(expressions, return_type);
     }
 
     pub fn parse_function(&mut self) -> FunctionExpression {
@@ -155,7 +155,8 @@ impl Parser<'_> {
                     Vec::new()
                 };
 
-                FunctionExpression::new(name, self.parse_block(), args)
+                let ret_type = self.parse_return_type_signature(Type::Unknown);
+                FunctionExpression::new(name, self.parse_block(ret_type), args)
             } else {
                 panic!("Unexpected token, expected Identifier ")
             }
@@ -181,7 +182,9 @@ impl Parser<'_> {
                     Vec::new()
                 };
 
-                ExternFunctionExpression::new(name, args)
+                let ret_type = self.parse_return_type_signature(Type::Void);
+
+                ExternFunctionExpression::new(name, args, ret_type)
             } else {
                 panic!("Unexpected token, expected Identifier ")
             }
@@ -223,6 +226,27 @@ impl Parser<'_> {
         }
 
         args
+    }
+
+    fn parse_return_type_signature(&mut self, default: Type) -> Type {
+        let possible_arrow = self.tokens.peek();
+        if let Some(token) = &possible_arrow {
+            if token.value == TokenValue::ReturnArrow {
+                self.tokens.by_ref().next();
+            } else {
+                return default;
+            }
+        } else {
+            return default;
+        }
+
+        let possible_ident = self.tokens.by_ref().peek().expect("Unexpected EOF");
+        if let TokenValue::Identifier(ident) = &possible_ident.value {
+            self.tokens.by_ref().next();
+            Type::from(ident.clone())
+        } else {
+            panic!("Expected type-identifier, got {:?}", possible_ident)
+        }
     }
 
     fn parse_type_signature(&mut self) -> Type {
