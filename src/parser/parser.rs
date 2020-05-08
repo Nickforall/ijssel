@@ -240,13 +240,7 @@ impl Parser<'_> {
             return default;
         }
 
-        let possible_ident = self.tokens.by_ref().peek().expect("Unexpected EOF");
-        if let TokenValue::Identifier(ident) = &possible_ident.value {
-            self.tokens.by_ref().next();
-            Type::from(ident.clone())
-        } else {
-            panic!("Expected type-identifier, got {:?}", possible_ident)
-        }
+        self.parse_type()
     }
 
     fn parse_type_signature(&mut self) -> Type {
@@ -257,12 +251,44 @@ impl Parser<'_> {
             panic!("Expected :, got {:?}", possible_colon)
         }
 
-        let possible_ident = self.tokens.by_ref().peek().expect("Unexpected EOF");
-        if let TokenValue::Identifier(ident) = &possible_ident.value {
+        self.parse_type()
+    }
+
+    fn parse_type(&mut self) -> Type {
+        let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+        if let TokenValue::Identifier(ident) = &peek.value {
             self.tokens.by_ref().next();
             Type::from(ident.clone())
+        } else if let TokenValue::OpenSqBracket = &peek.value {
+            self.tokens.by_ref().next();
+            let inner_type = self.parse_type();
+
+            let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+            if peek.value != TokenValue::SemiColon {
+                panic!(
+                    "Expected length definition seperator of list-type `;`, got {:?}",
+                    peek
+                )
+            }
+
+            self.tokens.by_ref().next();
+
+            let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+            if let TokenValue::NumConst(length) = &peek.value {
+                self.tokens.by_ref().next();
+
+                let peek = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                if peek.value != TokenValue::CloseSqBracket {
+                    panic!("Expected closing bracket of list-type `]`, got {:?}", peek)
+                }
+                self.tokens.by_ref().next();
+
+                Type::ListOf(Box::new(inner_type), *length as u32)
+            } else {
+                panic!("Expected list length definition, got {:?}", peek)
+            }
         } else {
-            panic!("Expected type-identifier, got {:?}", possible_ident)
+            panic!("Expected type-identifier, got {:?}", peek)
         }
     }
 

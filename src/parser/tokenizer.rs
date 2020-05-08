@@ -41,6 +41,9 @@ pub enum TokenValue {
     Comma,
     Colon,
     ReturnArrow,
+    OpenSqBracket,
+    CloseSqBracket,
+    SemiColon,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -201,6 +204,18 @@ impl Tokenizer<'_> {
             ':' => {
                 self.buffer.by_ref().next();
                 Some(Token::new(TokenValue::Colon))
+            }
+            '[' => {
+                self.buffer.by_ref().next();
+                Some(Token::new(TokenValue::OpenSqBracket))
+            }
+            ']' => {
+                self.buffer.by_ref().next();
+                Some(Token::new(TokenValue::CloseSqBracket))
+            }
+            ';' => {
+                self.buffer.by_ref().next();
+                Some(Token::new(TokenValue::SemiColon))
             }
             peek if peek.is_whitespace() => {
                 self.buffer.by_ref().next();

@@ -11,6 +11,8 @@ pub enum Type {
     /// A user defined type. This can be a typealias or a struct type.
     User(String),
 
+    ListOf(Box<Type>, u32),
+
     /// Return type used by extern functions
     Void,
 }
