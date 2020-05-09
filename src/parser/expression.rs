@@ -128,6 +128,17 @@ impl BinaryExpression {
 }
 
 #[derive(Clone, Debug)]
+pub struct ArrayExpression {
+    pub values: Vec<Expression>,
+}
+
+impl ArrayExpression {
+    pub fn new(values: Vec<Expression>) -> Self {
+        Self { values }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum Expression {
     Function(Box<FunctionExpression>),
     ExternFunction(Box<ExternFunctionExpression>),
@@ -135,5 +146,5 @@ pub enum Expression {
     NumberLiteral(Box<NumberLiteralExpression>),
     Variable(Box<VariableExpression>),
     Call(Box<CallExpression>),
-    // Block(Box<BlockExpression>),
+    Array(Box<ArrayExpression>),
 }

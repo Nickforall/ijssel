@@ -81,6 +81,7 @@ impl Parser<'_> {
                 self.tokens.by_ref().next();
                 Expression::Variable(Box::new(VariableExpression::new(identifier.clone())))
             }
+            TokenValue::OpenSqBracket => Expression::Array(Box::new(self.parse_array_expression())),
             val => panic!(
                 "Expected an expression, got token {:?} which cannot compose an expression",
                 val
@@ -301,6 +302,41 @@ impl Parser<'_> {
                 FunctionArgument::new(binding.clone(), arg_type)
             }
             token => panic!("Unexpected token {:?}, expected identifier", token),
+        }
+    }
+
+    fn parse_array_expression(&mut self) -> ArrayExpression {
+        let peek = self.tokens.peek().unwrap();
+        if let TokenValue::OpenSqBracket = &peek.value {
+            self.tokens.by_ref().next();
+
+            let mut items: Vec<Expression> = vec![];
+            while self.tokens.by_ref().peek().is_some() {
+                let possible_end_token = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                if let TokenValue::CloseSqBracket = &possible_end_token.value {
+                    self.tokens.by_ref().next();
+                    break;
+                }
+
+                let item_expression = self.parse_expression();
+                items.push(item_expression);
+
+                let _ = {
+                    let delimiter = self.tokens.by_ref().peek().expect("Unexpected EOF");
+                    if let Comma = &delimiter.value {
+                        self.tokens.by_ref().next()
+                    } else if let TokenValue::CloseSqBracket = &delimiter.value {
+                        self.tokens.by_ref().next();
+                        break;
+                    } else {
+                        panic!("expected `,`, got {:?}", delimiter.value)
+                    }
+                };
+            }
+
+            ArrayExpression::new(items)
+        } else {
+            panic!("Expected [, got {:?}",)
         }
     }
 
